@@ -6,8 +6,6 @@ const { Users } = require('../models');
 module.exports = async (req, res, next) => {
   const authorization = req.headers.authorization;
 
-  console.log("\n\n\nauthorization ==>", authorization + "\n\n\n");
-
   const [authType, authToken] = (authorization ?? '').split(' ');
 
   if (authType !== 'Bearer' || !authToken) {

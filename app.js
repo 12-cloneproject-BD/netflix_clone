@@ -8,6 +8,8 @@ app.use('/uploads', express.static('uploads'))
 const routes = require('./routes');
 //winston
 const logger = require('./middlewares/logger.js')
+app.use(morgan('dev'));
+const PORT = process.env.SERVER_PORT;
 
 //cors 
 app.use(
@@ -19,23 +21,16 @@ app.use(
   })
 );
 
-const PORT = process.env.SERVER_PORT;
-
-
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: false })); // x-www-form-urlencoded형태의 데이터 해설
 app.use(cookieParser());
-app.use(morgan('dev'));
-
 app.use('/', routes);
-
 
 // 에러 핸들러
 app.use((err, req, res, next) => {
-  console.log('\n\n\n\n에러 핸들러 ==>>', err + '\n\n\n\n');
+  logger.error(err.stack)
   return res.status(err.output.payload.statusCode || 500).json({
-    success: err.data || false,
+    // success: err.data || false,
     errorMessage: err.output.payload.message || '서버 에러가 발생했습니다.',
   });
 });

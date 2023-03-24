@@ -10,50 +10,63 @@ class UserController {
    * @param {import("express").Response} res - express Response
    * @param {import("express").NextFunction} next - express Response
    * **/
-
+  //로그인
   userLogin = async (req, res, next) => {
     try {
       const { email, password } = req.body;
-
       await this.userService.userLogin( email, password);
 
       const token = await this.userService.generateToken(email);
-
-      let expires = new Date();
-      expires.setMinutes(expires.getMinutes() + 60);
-
-      // authorization 헤더 설정
       res.set('Authorization', `Bearer ${token}`);
-
-      return res.status(201).json({
-        success: true,
-        message: '로그인에 성공했습니다',
-      });
+      
+      return res.status(201).json({ message: '로그인에 성공했습니다' });
     } catch (error) {
       next(error);
     }
   };
 
+    /**
+   * @param {import("express").Request} req - express Request
+   * @param {import("express").Response} res - express Response
+   * @param {import("express").NextFunction} next - express Response
+   * **/
+  //회원가입
   userSignup = async (req, res, next) => {
     try {
       const { email, nickname, password } = req.body;
-
       await this.userService.userSignup( email, nickname, password);
-
-        return res
-          .status(201)
-          .json({ success: true, message: '회원 가입에 성공하였습니다.'});
-
-    
-  } catch (error) {
+      
+      return res.status(201).json({ message: '회원 가입에 성공하였습니다.' });
+    } catch (error) {
       next(error);
     }
   };
+
+    /**
+   * @param {import("express").Response} res - express Response
+   * @param {import("express").NextFunction} next - express Response
+   * **/
+  //모든 유저 조회
   getAllusers = async (req, res, next) => {
     try {
-      const users = await this.userService.getAllusers(); // QuizService의 getAllQuiz 함수 실행
+      const users = await this.userService.getAllusers();
 
-      res.status(200).json({ allUsers: users }); // 가져온 퀴즈를 JSON 형태로 반환
+      res.status(200).json({ allUsers: users }); 
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * @param {import("express").Response} res - express Response
+   * @param {import("express").NextFunction} next - express Response
+   * **/
+  //로그아웃
+  userlogout = async (req, res, next) => {
+    try {
+      res.clearHeaders;
+
+      res.status(200).json({ message: '로그아웃이 잘 되었습니다.' });
     } catch (error) {
       next(error);
     }

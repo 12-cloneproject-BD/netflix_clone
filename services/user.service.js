@@ -19,21 +19,35 @@ class UserService {
   constructor() {
     this.userRepository = new UserRepository();
   }
-  userLogin = async (email, password) => {
 
+  /**
+   * @param {String} email
+   * @param {String} password
+   */
+  //로그인
+  userLogin = async (email, password) => {
+    try {
     const user = await this.userRepository.findByID(email);
       
     if (!user) {
-        throw Boom.notFound('존재하지 않는 회원입니다', false);
+        throw Boom.notFound('존재하지 않는 이메일 주소입니다');
     }
 
     const comparePw = await comparePassword(password, user.password);
 
     if (!comparePw) {
-        throw Boom.unauthorized('패스워드를 확인해주세요.', false);
+        throw Boom.unauthorized('패스워드를 확인해주세요.');
+    }
+    } catch (error) {
+    logger.error(error.message);
+    throw error;
     }
   };
 
+  /**
+   * @param {String} email
+   */
+  //토큰 생성
   generateToken = async (email) => {
     const token = jwt.sign({ email }, process.env.SECRET_KEY, {
       expiresIn: '60m',
@@ -42,27 +56,33 @@ class UserService {
     return token;
   };
 
+  /**
+   * @param {String} email
+   * @param {String} nickname
+   * @param {String} password
+   */
+  //회원가입
   userSignup = async (email, nickname, password) => {
     try {
     await userSchema.validate({ email, password });
     
     if (email.search(re_email) === -1) {
-      throw Boom.badData('유효하지 않은 이메일 주소 입니다.', false);
+      throw Boom.badRequest('유효하지 않은 이메일 주소 입니다.');
     }
 
     if (password.search(re_password) === -1) {
-      throw Boom.badData('유효하지 않은 패스워드 입니다.', false);
+      throw Boom.badRequest('유효하지 않은 패스워드 입니다.');
     }
 
     const existingUser = await this.userRepository.findByID( email );
     if (existingUser) {
-      throw Boom.badData('중복된 아이디 입니다', false);
+      throw Boom.conflict('중복된 이메일 주소 입니다');
     }
 
     const existNickname = await this.userRepository.findBynickname( nickname );
 
     if (existNickname) {
-      throw Boom.badData('중복된 닉네임 입니다', false);
+      throw Boom.conflict('중복된 닉네임 입니다');
     }
 
     const hashedPassword = await createHashPassword(password);
@@ -73,11 +93,12 @@ class UserService {
       hashedPassword,
     );
     } catch (error) {
-      logger.error(error.message, { email, nickname });
+      logger.error(error.message);
     throw error;
   }
   };
 
+  //모든 유저 조회
   getAllusers = async () => {
     const allUsers = await this.userRepository.getAllusers();
     allUsers.sort((a, b) => {
