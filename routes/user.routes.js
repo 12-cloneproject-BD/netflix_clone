@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const authLoginMiddleware = require('../middlewares/auth-login-middleware');
 
-const UserController = require('../controller/user.controller');
+const UserController = require('../controllers/user.controller');
 const userController = new UserController();
 
 // 회원가입
