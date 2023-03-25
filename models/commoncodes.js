@@ -1,35 +1,39 @@
 'use strict';
 const { Model } = require('sequelize');
+const Sequelize = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class Users extends Model {
+  class CommonCodes extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
-    static associate(models) {
-
+    // static associate(models) {
       
-    }
+    // }
   }
-  Users.init(
+  CommonCodes.init(
     {
-      userId: {
+      codeId: {
         allowNull: false, // NOT NULL
-        autoIncrement: true,
         primaryKey: true, // Primary Key (기본키)
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
+        defaultValue: Sequelize.UUIDV4,
       },
-      email: {
+      codeUseTalbe: {
         allowNull: false, // NOT NULL
         type: DataTypes.STRING,
       },
-      nickname: {
+      codeUseColum: {
         allowNull: false, // NOT NULL
         unique: true,
         type: DataTypes.STRING,
       },
-      password: {
+      codeValue: {
+        allowNull: false, // NOT NULL
+        type: DataTypes.STRING(8),
+      },
+      codeName: {
         allowNull: false, // NOT NULL
         type: DataTypes.STRING,
       },
@@ -46,8 +50,8 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
       sequelize,
-      modelName: 'Users',
+      modelName: 'CommonCodes',
     }
   );
-  return Users;
+  return CommonCodes;
 };
