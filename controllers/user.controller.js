@@ -1,4 +1,4 @@
-const UserService = require('../services/user.service');
+const UserService = require("../services/user.service");
 
 class UserController {
   constructor() {
@@ -14,18 +14,18 @@ class UserController {
   userLogin = async (req, res, next) => {
     try {
       const { email, password } = req.body;
-      await this.userService.userLogin( email, password);
+      await this.userService.userLogin(email, password);
 
       const token = await this.userService.generateToken(email);
-      res.set('Authorization', `Bearer ${token}`);
-      
-      return res.status(201).json({ message: '로그인에 성공했습니다' });
+      res.set("Authorization", `Bearer ${token}`);
+
+      return res.status(201).json({ message: "로그인에 성공했습니다" });
     } catch (error) {
       next(error);
     }
   };
 
-    /**
+  /**
    * @param {import("express").Request} req - express Request
    * @param {import("express").Response} res - express Response
    * @param {import("express").NextFunction} next - express Response
@@ -34,15 +34,15 @@ class UserController {
   userSignup = async (req, res, next) => {
     try {
       const { email, nickname, password } = req.body;
-      await this.userService.userSignup( email, nickname, password);
-      
-      return res.status(201).json({ message: '회원 가입에 성공하였습니다.' });
+      await this.userService.userSignup(email, nickname, password);
+
+      return res.status(201).json({ message: "회원 가입에 성공하였습니다." });
     } catch (error) {
       next(error);
     }
   };
 
-    /**
+  /**
    * @param {import("express").Response} res - express Response
    * @param {import("express").NextFunction} next - express Response
    * **/
@@ -51,7 +51,7 @@ class UserController {
     try {
       const users = await this.userService.getAllusers();
 
-      res.status(200).json({ allUsers: users }); 
+      res.status(200).json({ allUsers: users });
     } catch (error) {
       next(error);
     }
@@ -66,12 +66,10 @@ class UserController {
     try {
       res.clearHeaders;
 
-      res.status(200).json({ message: '로그아웃이 잘 되었습니다.' });
+      res.status(200).json({ message: "로그아웃이 잘 되었습니다." });
     } catch (error) {
       next(error);
     }
   };
-
-  
 }
 module.exports = UserController;

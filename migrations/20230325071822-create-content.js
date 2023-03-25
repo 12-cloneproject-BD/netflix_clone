@@ -1,58 +1,58 @@
-'use strict';
+"use strict";
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Contents', {
+    await queryInterface.createTable("Contents", {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
       },
       contentIdx: {
-        type: Sequelize.UUID
+        type: Sequelize.UUID,
       },
       name: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       desc: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       class: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       viewLimit: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       playTime: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       videoUrl: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       videoThumUrl: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       status: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       createdAt: {
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
       },
       updatedAt: {
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
       },
       createdAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
       },
       updatedAt: {
         allowNull: false,
-        type: Sequelize.DATE
-      }
+        type: Sequelize.DATE,
+      },
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Contents');
-  }
+    await queryInterface.dropTable("Contents");
+  },
 };

@@ -1,16 +1,16 @@
-require('dotenv').config();
+require("dotenv").config();
 
-const jwt = require('jsonwebtoken');
-const { Users } = require('../models');
+const jwt = require("jsonwebtoken");
+const { Users } = require("../models");
 
 module.exports = async (req, res, next) => {
   const authorization = req.headers.authorization;
 
-  const [authType, authToken] = (authorization ?? '').split(' ');
+  const [authType, authToken] = (authorization ?? "").split(" ");
 
-  if (authType !== 'Bearer' || !authToken) {
+  if (authType !== "Bearer" || !authToken) {
     return res.status(403).json({
-      errorMessage: '로그인 후에 이용할 수 있는 기능입니다.',
+      errorMessage: "로그인 후에 이용할 수 있는 기능입니다.",
     });
   }
 
@@ -29,7 +29,7 @@ module.exports = async (req, res, next) => {
     console.error(err);
 
     return res.status(403).json({
-      errorMessage: '전달된 쿠키에서 오류가 발생하였습니다.',
+      errorMessage: "전달된 쿠키에서 오류가 발생하였습니다.",
     });
   }
 };

@@ -1,18 +1,21 @@
-require('dotenv').config();
+require("dotenv").config();
 
-const Joi = require('joi');
-const UserRepository = require('../repositories/user.repository');
-const jwt = require('jsonwebtoken');
-const { createHashPassword, comparePassword } = require('../modules/cryptoUtils.js');
-const Boom = require('boom');
-const logger = require('../middlewares/logger.js')
+const Joi = require("joi");
+const UserRepository = require("../repositories/user.repository");
+const jwt = require("jsonwebtoken");
+const {
+  createHashPassword,
+  comparePassword,
+} = require("../modules/cryptoUtils.js");
+const Boom = require("boom");
+const logger = require("../middlewares/logger.js");
 
-const re_email = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
-const re_password = /^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/
+const re_email = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+const re_password = /^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/;
 
 const userSchema = Joi.object({
   email: Joi.string().email().required(),
-  password: Joi.string().pattern(re_password).required()
+  password: Joi.string().pattern(re_password).required(),
 });
 
 class UserService {
@@ -27,20 +30,20 @@ class UserService {
   //로그인
   userLogin = async (email, password) => {
     try {
-    const user = await this.userRepository.findByID(email);
-      
-    if (!user) {
-        throw Boom.notFound('존재하지 않는 이메일 주소입니다');
-    }
+      const user = await this.userRepository.findByID(email);
 
-    const comparePw = await comparePassword(password, user.password);
+      if (!user) {
+        throw Boom.notFound("존재하지 않는 이메일 주소입니다");
+      }
 
-    if (!comparePw) {
-        throw Boom.unauthorized('패스워드를 확인해주세요.');
-    }
+      const comparePw = await comparePassword(password, user.password);
+
+      if (!comparePw) {
+        throw Boom.unauthorized("패스워드를 확인해주세요.");
+      }
     } catch (error) {
-    logger.error(error.message);
-    throw error;
+      logger.error(error.message);
+      throw error;
     }
   };
 
@@ -50,7 +53,7 @@ class UserService {
   //토큰 생성
   generateToken = async (email) => {
     const token = jwt.sign({ email }, process.env.SECRET_KEY, {
-      expiresIn: '60m',
+      expiresIn: "60m",
     });
 
     return token;
@@ -64,38 +67,34 @@ class UserService {
   //회원가입
   userSignup = async (email, nickname, password) => {
     try {
-    await userSchema.validate({ email, password });
-    
-    if (email.search(re_email) === -1) {
-      throw Boom.badRequest('유효하지 않은 이메일 주소 입니다.');
-    }
+      await userSchema.validate({ email, password });
 
-    if (password.search(re_password) === -1) {
-      throw Boom.badRequest('유효하지 않은 패스워드 입니다.');
-    }
+      if (email.search(re_email) === -1) {
+        throw Boom.badRequest("유효하지 않은 이메일 주소 입니다.");
+      }
 
-    const existingUser = await this.userRepository.findByID( email );
-    if (existingUser) {
-      throw Boom.conflict('중복된 이메일 주소 입니다');
-    }
+      if (password.search(re_password) === -1) {
+        throw Boom.badRequest("유효하지 않은 패스워드 입니다.");
+      }
 
-    const existNickname = await this.userRepository.findBynickname( nickname );
+      const existingUser = await this.userRepository.findByID(email);
+      if (existingUser) {
+        throw Boom.conflict("중복된 이메일 주소 입니다");
+      }
 
-    if (existNickname) {
-      throw Boom.conflict('중복된 닉네임 입니다');
-    }
+      const existNickname = await this.userRepository.findBynickname(nickname);
 
-    const hashedPassword = await createHashPassword(password);
+      if (existNickname) {
+        throw Boom.conflict("중복된 닉네임 입니다");
+      }
 
-    await this.userRepository.userSignup(
-      email,
-      nickname,
-      hashedPassword,
-    );
+      const hashedPassword = await createHashPassword(password);
+
+      await this.userRepository.userSignup(email, nickname, hashedPassword);
     } catch (error) {
       logger.error(error.message);
-    throw error;
-  }
+      throw error;
+    }
   };
 
   //모든 유저 조회
@@ -114,7 +113,6 @@ class UserService {
         updatedAt: user.updatedAt,
       };
     });
-  }
-  
+  };
 }
 module.exports = UserService;
