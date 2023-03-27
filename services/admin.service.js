@@ -29,7 +29,7 @@ class AdminService {
       ) {
         throw Boom.preconditionFailed("데이터 형식이 올바르지 않습니다.");
       }
-      await this.adminRepository.postMovie({
+      const postedMovie = await this.adminRepository.postMovie({
         title,
         category,
         desc,
@@ -39,6 +39,7 @@ class AdminService {
         thumbUrl,
         movieUrl,
       });
+      return postedMovie;
     } catch (error) {
       throw Boom.preconditionFailed("영상 등록에 실패하였습니다.");
     }

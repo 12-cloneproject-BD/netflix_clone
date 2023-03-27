@@ -2,6 +2,7 @@ const { Movies } = require("../models");
 const { Op } = require("sequelize");
 
 class AdminRepository {
+  
   postMovie = async ({
     title,
     category,

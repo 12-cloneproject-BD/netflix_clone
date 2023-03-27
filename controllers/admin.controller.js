@@ -152,13 +152,13 @@ class AdminController {
         updatedElement.genre = genre;
       }
       if (thumbUrl) {
-        updatedElement.category = thumbUrl;
+        updatedElement.thumbUrl = thumbUrl;
       }
       if (movieUrl) {
-        updatedElement.category = movieUrl;
+        updatedElement.movieUrl = movieUrl;
       }
 
-      await this.adminService.updateMovie(updatedElement);
+      const updatedMovie = await this.adminService.updateMovie(updatedElement);
       return res
         .status(201)
         .json({ updatedMovie, message: "정보 수정을 완료했습니다." });
