@@ -7,6 +7,7 @@ const {
   LikeRank,
   CommonCodes,
   Profile,
+  Like,
 } = require("../models");
 const { Op, Sequelize } = require("sequelize");
 
@@ -214,7 +215,6 @@ class MovieRepository extends Content {
 
   //likeRank순 조회
   likeRank = async (profileIdx, viewLimit) => {
-    // Get movies with the given contentIdx and likeRankIdx
     const findMovies = await Content.findAll({
       raw: true,
       attributes: [
@@ -233,17 +233,7 @@ class MovieRepository extends Content {
       ],
     });
 
-    // Update the LikeRanks table with the likeCount
-    const likeCount = await Like.count({ where: { contentIdx } });
-    await LikeRank.upsert({ contentIdx, likeRankIdx, ProfileIdx });
-
-    // Get the updated LikeRank data (sorted by likeCount in descending order)
-    const likeRanks = await LikeRank.findAll({
-      where: { likeRankIdx },
-      order: [["likeCount", "DESC"]],
-    });
-
-    return { findMovies, likeRanks };
+    return { findMovies };
   };
 
   // likeRank = async (likeRankIdx, contentIdx) => {
