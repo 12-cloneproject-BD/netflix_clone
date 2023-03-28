@@ -119,59 +119,68 @@ class MovieRepository extends Content {
   };
 
   //찜목록 조회
-  savedVideo = async (profileIdx) => {
+  savedVideo = async (profileIdx, viewLimit) => {
     const findMovies = await Content.findAll({
       raw: true,
-      attributes: ["contentIdx", "name", "videoUrl", "videoThumUrl"],
+      attributes: [
+        "contentIdx",
+        "name",
+        "videoUrl",
+        "videoThumUrl",
+        "viewLimit",
+      ],
       include: [
         {
           model: Save,
           where: {
-            [Op.and]: [{ profileIdx }],
+            profileIdx: profileIdx,
           },
-          attributes: [], // 추가한 옵션
+          attributes: ["profileIdx"], // Save 모델의 profileIdx 값도 반환
+          required: true, // Save 모델과 조인 시 INNER JOIN을 사용하여 해당 조건에 맞는 값만 반환
         },
       ],
     });
-    return findMovies;
+
+    const filteredVideos = findMovies.filter((movie) => {
+      return (
+        movie.viewLimit === viewLimit ||
+        (viewLimit === "VL000001" && movie.viewLimit === "VL000002")
+      );
+    });
+
+    return filteredVideos;
   };
 
-  // savedVideo = async (profileIdx) => {
-  //   const findMovies = await Content.findAll({
-  //     raw: true,
-  //     attributes: ["contentIdx", "name", "videoUrl", "videoThumUrl"],
-  //     include: [
-  //       {
-  //         model: Save,
-  //         where: {
-  //           [Op.and]: [{ "Saves.profileIdx": profilIdx }, { profileIdx }],
-  //         },
-  //         attributes: [], // 추가한 옵션
-  //       },
-  //     ],
-  //   });
-  //   return findMovies;
-  // };
-
   //viewRank순 조회
-  viewRank = async (viewRankIdx, contentIdx) => {
-    console.log(viewRankIdx);
+  viewRank = async (profileIdx, viewLimit) => {
     const findMovies = await Content.findAll({
       raw: true,
-      where: { contentIdx },
-      attributes: ["contentIdx", "name", "videoUrl", "videoThumUrl"],
-      limit: 10,
+      attributes: [
+        "contentIdx",
+        "name",
+        "videoUrl",
+        "videoThumUrl",
+        "viewLimit",
+      ],
       include: [
         {
           model: ViewRank,
-          where: {
-            [Op.and]: [{ viewRankIdx }, { contentIdx }],
-          },
-          attributes: [], //값을 설정해주지않으면 viewRank의 모든 값이나오게된다.
+          as: "ViewRanks",
+          attributes: [],
         },
       ],
+      order: [[Sequelize.literal("COUNT(ViewRanks.contentIdx)"), "DESC"]],
+      group: ["Content.contentIdx"],
     });
-    return findMovies;
+
+    const filteredVideos = findMovies.filter((movie) => {
+      return (
+        movie.viewLimit === viewLimit ||
+        (viewLimit === "VL000001" && movie.viewLimit === "VL000002")
+      );
+    });
+
+    return filteredVideos;
   };
 
   //likeRank순 조회

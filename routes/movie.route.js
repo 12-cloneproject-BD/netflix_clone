@@ -1,19 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middlewares/authMiddlewareProfile");
+
 const MovieController = require("../controllers/movie.controller");
 const movieController = new MovieController();
-const {
-  Content,
-  Participant,
-  Category,
-  Save,
-  ViewRank,
-  LikeRank,
-  CommonCodes,
-  Profile,
-} = require("../models");
-const { Op, Sequelize } = require("sequelize");
 
 //전체영상 조회
 router.get("/", authMiddleware, movieController.allMovies);
