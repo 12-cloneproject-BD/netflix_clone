@@ -80,8 +80,8 @@ class MovieController {
   //likeRank순 조회
   likeRank = async (req, res, next) => {
     // try {
-    const { likeRankIdx, contentIdx } = req.params;
-    const category = await this.movieService.likeRank(likeRankIdx, contentIdx);
+    const { profileIdx, viewLimit } = res.locals.profile;
+    const category = await this.movieService.likeRank(profileIdx, viewLimit);
     res.status(200).json({ category });
     // } catch (error) {
     //   next(error);

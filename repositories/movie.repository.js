@@ -184,23 +184,55 @@ class MovieRepository extends Content {
   };
 
   //likeRank순 조회
-  likeRank = async (likeRankIdx, contentIdx) => {
-    const findMovies = await Content.findAll({
-      raw: true,
-      where: { contentIdx },
-      attributes: ["contentIdx", "name", "videoUrl", "videoThumUrl"],
-      limit: 10,
-      include: [
-        {
-          model: LikeRank,
-          where: {
-            [Op.and]: [{ likeRankIdx }, { contentIdx }],
-          },
-        },
-      ],
-    });
-    return findMovies;
-  };
+  // likeRank = async (profileIdx, viewLimit) => {
+  //   // Get movies with the given contentIdx and likeRankIdx
+  //   const findMovies = await Content.findAll({
+  //     raw: true,
+  //     attributes: ["contentIdx", "name", "videoUrl", "videoThumUrl","viewLimit"],
+  //     include: [
+  //       {
+  //         model: LikeRank,Like,
+  //         attributes: []
+  //       },
+  //     ],
+  //   });
+
+  //   // Update the LikeRanks table with the likeCount
+  //   const likeCount = await Like.count({ where: { contentIdx } });
+  //   await LikeRank.upsert({ contentIdx, likeRankIdx, ProfileIdx });
+
+  //   // Get the updated LikeRank data (sorted by likeCount in descending order)
+  //   const likeRanks = await LikeRank.findAll({
+  //     where: { likeRankIdx },
+  //     order: [["likeCount", "DESC"]],
+  //   });
+
+  //   return { findMovies, likeRanks };
+  // };
+
+  // likeRank = async (likeRankIdx, contentIdx) => {
+  //   const findMovies = await Content.findAll({
+  //     raw: true,
+  //     where: { contentIdx },
+  //     attributes: ["contentIdx", "name", "videoUrl", "videoThumUrl"],
+  //     include: [
+  //       {
+  //         model: LikeRank,
+  //         where: {
+  //           [Op.and]: [{ likeRankIdx }, { contentIdx }],
+  //         },
+  //       },
+  //     ],
+  //   });
+  //   const likeCount = await Like.count({ where: { contentIdx } });
+  //   await LikeRank.upsert({ contentIdx, likeRankIdx, likeCount });
+
+  //   const likeRanks = await LikeRank.findAll({
+  //     where: { likeRankIdx },
+  //     order: [["likeCount", "DESC"]], // sort by likeCount in descending order
+  //   });
+  //   return { findMovies, likeRanks };
+  // };
 
   //viewHistory가 있을때 조회
   viewHistory = async (viewHistoryIdx, contentIdx) => {

@@ -64,11 +64,8 @@ class MovieService {
   };
 
   //likeRank순 조회
-  likeRank = async (likeRankIdx, contentIdx) => {
-    const category = await this.movieRepository.likeRank(
-      likeRankIdx,
-      contentIdx
-    );
+  likeRank = async (profileIdx, viewLimit) => {
+    const category = await this.movieRepository.likeRank(profileIdx, viewLimit);
     if (!category) {
       throw Boom.notFound("카테고리가 존재하지 않습니다.", false);
     }
