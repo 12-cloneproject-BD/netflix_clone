@@ -13,5 +13,6 @@ router.use("/profile", profileRouter);
 router.use("/movies", videoRouter, likeRouter, saveRouter);
 router.use('/admin', adminRouter);
 router.use("/profile", profileRouter);
+router.use("/search", searchRouter);
 
 module.exports = router;
