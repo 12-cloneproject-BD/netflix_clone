@@ -10,7 +10,7 @@ class MovieController {
     try {
       const { viewLimit } = res.locals.profile;
       const movie = await this.movieService.allMovies(viewLimit);
-      res.status(200).json({ movies: movie });
+      res.status(200).json({ allVideos: movie });
     } catch (error) {
       next(error);
     }
@@ -43,13 +43,13 @@ class MovieController {
 
   //영상 상세조회
   onesMovie = async (req, res, next) => {
-    try {
-      const { contentIdx } = req.params;
-      const findByMovie = await this.movieService.onesMovie(contentIdx);
-      res.status(200).json({ movie: findByMovie });
-    } catch (error) {
-      next(error);
-    }
+    // try {
+    const { contentIdx } = req.params;
+    const findByMovie = await this.movieService.onesMovie(contentIdx);
+    res.status(200).json({ detailVideo: findByMovie });
+    // } catch (error) {
+    //   next(error);
+    // }
   };
 
   //찜목록 조회
@@ -60,7 +60,7 @@ class MovieController {
         profileIdx,
         viewLimit
       );
-      res.status(200).json({ saved: category });
+      res.status(200).json({ savedVideo: category });
     } catch (error) {
       next(error);
     }
@@ -71,7 +71,7 @@ class MovieController {
     try {
       const { profileIdx, viewLimit } = res.locals.profile;
       const category = await this.movieService.viewRank(profileIdx, viewLimit);
-      res.status(200).json({ category });
+      res.status(200).json({ viewRank: category });
     } catch (error) {
       next(error);
     }

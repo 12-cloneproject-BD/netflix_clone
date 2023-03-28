@@ -10,6 +10,10 @@ class MovieService {
     const movie = await this.movieRepository.FindAll(viewLimit);
     return movie;
   };
+  allMovies = async (viewLimit) => {
+    const movie = await this.movieRepository.FindAll(viewLimit);
+    return movie;
+  };
 
   //영상 카테고리 전달
   moviesCategory = async () => {
@@ -34,6 +38,13 @@ class MovieService {
   };
 
   //영상 상세조회
+  onesMovie = async (contentIdx) => {
+    const movie = await this.movieRepository.FindOne(contentIdx);
+    if (!movie) {
+      throw Boom.notFound("영상이 존재하지 않습니다.", false);
+    }
+    return movie;
+  };
   onesMovie = async (contentIdx) => {
     const movie = await this.movieRepository.FindOne(contentIdx);
     if (!movie) {

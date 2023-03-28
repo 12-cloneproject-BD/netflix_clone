@@ -84,11 +84,19 @@ class MovieRepository extends Content {
       );
     });
 
-    return { filteredVideos };
+    return {
+      Genre: findGenre.dataValues.codename,
+      videos: filteredVideos,
+    };
   };
 
   //영상 상세조회
   FindOne = async (contentIdx) => {
+    const findPerson = await CommonCodes.findAll({
+      where: { codeUseColum: "person" },
+      attributes: ["codename", "codeValue"],
+    });
+
     const findOnesMovie = await Content.findOne({
       where: { contentIdx },
       attributes: [
@@ -98,7 +106,6 @@ class MovieRepository extends Content {
         "kind",
         "videoThumUrl",
         "Categories.genre", //여기서 불러올때는 데이터베이스의 이름과 동일해야함
-        "Participants.person",
         "desc",
         "playtime",
         "status",
@@ -109,13 +116,28 @@ class MovieRepository extends Content {
           model: Category,
           attributes: [],
         },
-        {
-          model: Participant,
-          attributes: [],
-        },
       ],
     });
-    return findOnesMovie;
+
+    const findAllPerson = await Participant.findAll({
+      where: {
+        contentIdx,
+      },
+      attributes: ["person"],
+    });
+
+    const personCodes = findPerson
+      .filter((p) => {
+        const codeValue = findAllPerson.find(
+          (fp) => fp.person === p.dataValues.codeValue
+        );
+        return codeValue !== undefined;
+      })
+      .map((p) => p.dataValues.codename);
+    return {
+      [findOnesMovie.name]: findOnesMovie,
+      actor: personCodes,
+    };
   };
 
   //찜목록 조회
@@ -180,35 +202,49 @@ class MovieRepository extends Content {
       );
     });
 
-    return filteredVideos;
+    const rankedVideos = filteredVideos.map((movie, index) => {
+      return {
+        ...movie,
+        rank: index + 1,
+      };
+    });
+
+    return rankedVideos;
   };
 
   //likeRank순 조회
-  // likeRank = async (profileIdx, viewLimit) => {
-  //   // Get movies with the given contentIdx and likeRankIdx
-  //   const findMovies = await Content.findAll({
-  //     raw: true,
-  //     attributes: ["contentIdx", "name", "videoUrl", "videoThumUrl","viewLimit"],
-  //     include: [
-  //       {
-  //         model: LikeRank,Like,
-  //         attributes: []
-  //       },
-  //     ],
-  //   });
+  likeRank = async (profileIdx, viewLimit) => {
+    // Get movies with the given contentIdx and likeRankIdx
+    const findMovies = await Content.findAll({
+      raw: true,
+      attributes: [
+        "contentIdx",
+        "name",
+        "videoUrl",
+        "videoThumUrl",
+        "viewLimit",
+      ],
+      include: [
+        {
+          model: LikeRank,
+          Like,
+          attributes: [],
+        },
+      ],
+    });
 
-  //   // Update the LikeRanks table with the likeCount
-  //   const likeCount = await Like.count({ where: { contentIdx } });
-  //   await LikeRank.upsert({ contentIdx, likeRankIdx, ProfileIdx });
+    // Update the LikeRanks table with the likeCount
+    const likeCount = await Like.count({ where: { contentIdx } });
+    await LikeRank.upsert({ contentIdx, likeRankIdx, ProfileIdx });
 
-  //   // Get the updated LikeRank data (sorted by likeCount in descending order)
-  //   const likeRanks = await LikeRank.findAll({
-  //     where: { likeRankIdx },
-  //     order: [["likeCount", "DESC"]],
-  //   });
+    // Get the updated LikeRank data (sorted by likeCount in descending order)
+    const likeRanks = await LikeRank.findAll({
+      where: { likeRankIdx },
+      order: [["likeCount", "DESC"]],
+    });
 
-  //   return { findMovies, likeRanks };
-  // };
+    return { findMovies, likeRanks };
+  };
 
   // likeRank = async (likeRankIdx, contentIdx) => {
   //   const findMovies = await Content.findAll({
