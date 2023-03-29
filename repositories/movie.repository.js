@@ -6,6 +6,7 @@ const {
   ViewRank,
   LikeRank,
   CommonCodes,
+  ViewHistory,
   Profile,
   Like,
 } = require("../models");
@@ -227,13 +228,29 @@ class MovieRepository extends Content {
       include: [
         {
           model: LikeRank,
-          Like,
+          as: "LikeRanks",
           attributes: [],
         },
       ],
+      order: [[Sequelize.literal("COUNT(LikeRanks.contentIdx)"), "DESC"]],
+      group: ["Content.contentIdx"],
     });
 
-    return { findMovies };
+    const filteredVideos = findMovies.filter((movie) => {
+      return (
+        movie.viewLimit === viewLimit ||
+        (viewLimit === "VL000001" && movie.viewLimit === "VL000002")
+      );
+    });
+
+    const rankedVideos = filteredVideos.map((movie, index) => {
+      return {
+        ...movie,
+        rank: index + 1,
+      };
+    });
+
+    return { rankedVideos };
   };
 
   // likeRank = async (likeRankIdx, contentIdx) => {
@@ -260,24 +277,190 @@ class MovieRepository extends Content {
   //   return { findMovies, likeRanks };
   // };
 
-  //viewHistory가 있을때 조회
-  viewHistory = async (viewHistoryIdx, contentIdx) => {
-    const findMovies = await Content.findAll({
-      raw: true,
-      where: { contentIdx },
-      attributes: ["contentIdx", "name", "videoUrl", "videoThumUrl"],
-      limit: 10,
-      include: [
-        {
-          model: this.viewHistory,
-          where: {
-            [Op.and]: [{ contentIdx }, { viewHistoryIdx }],
-          },
-        },
-      ],
+
+  // where: { codeUseColum: "person" },
+  // attributes: ["codename", "codeValue"],
+
+  /**
+   * 내가 본 영상 리스트 조회
+   * @param {String} profileIdx
+   * @returns 내가 본 영상 배열
+   */
+  viewHistory = async (profileIdx) => {
+    const findContentKey = await ViewHistory.findAll({
+      where: {
+        profileIdx
+      },
+      attributes: ["contentIdx"],
+      order: [["viewtime", "DESC"]],
     });
+
+    const contentIdxs = findContentKey.map((history) => history.contentIdx);
+
+    const findMovies = await Content.findAll({
+      attributes: ["contentIdx", "name", "videoUrl", "videoThumUrl"],
+      where: {
+        contentIdx: contentIdxs,
+      },
+      order: [
+        [Sequelize.literal(`FIELD(contentIdx, '${contentIdxs.join("','")}')`)]
+      ]
+    });
+
     return findMovies;
   };
+
+  /**
+   * 영상 재생
+   * @param {String} contentIdx
+   * @returns 영상 정보 contentIdx, name, videoUrl, videoThumUrl
+   */
+  viewContent = async (contentIdx) => {
+    const viewContent = await Content.findOne({
+      attributes: ["contentIdx", "name", "videoUrl", "videoThumUrl"],
+      where: {
+        contentIdx,
+      },
+    });
+    return viewContent;
+  };
+
+  /**
+   * 영상 조회 횟수 증가
+   * @param {String} profileIdx
+   * @param {String} contentIdx
+   * @returns 방금 조회수 증가시킨 데이터
+   */
+  viewIncrease = async (profileIdx, contentIdx) => {
+    const viewIncrease = await ViewRank.create({
+      profileIdx,
+      contentIdx,
+    });
+    return viewIncrease;
+  };
+
+  /**
+   * 내가 본 영상 기록 남기기
+   * @param {String} profileIdx
+   * @param {String} contentIdx
+   * @return 기록 작성 (create) /수정 데이터 (update)
+   */
+  viewRecordHistory = async (profileIdx, contentIdx) => {
+
+    let updateRecordHistory = await ViewHistory.findOrCreate({
+      where: {
+        [Op.and]: [{ profileIdx }, { contentIdx }],
+      },
+      defaults: {
+        profileIdx,
+        contentIdx,
+        viewtime: new Date(),
+      },
+    }).then(([data, created]) => {
+      if (!created) {
+        // 데이터 존재
+        return 'update'
+      }else{
+        return 'create';
+      }
+    });
+
+    if(updateRecordHistory === 'update'){
+      await ViewHistory.update(
+        {
+          viewtime: new Date()
+        },
+        {
+          where: {
+            [Op.and]: [{ profileIdx }, { contentIdx }],
+          }
+        }
+      )
+      updateRecordHistory = 'update'
+    }
+
+    return updateRecordHistory;
+  };
+
+  /**
+   * 이 컨텐츠 좋아요
+   * @param {String} profileIdx
+   * @param {String} contentIdx
+   * @return 'delete' or 'create'
+   */
+  pickThisContent = async (profileIdx, contentIdx) => {
+    const updateContentLike = await Like.findOrCreate({
+      where: {
+        [Op.and]: [{ profileIdx }, { contentIdx }],
+      },
+      defaults: {
+        profileIdx,
+        contentIdx,
+        viewTime: new Date()
+      },
+    }).then(([data, created]) => {
+      if (!created) {
+        // 데이터가 존재
+        data.destroy();
+        return "delete";
+      }
+      return "create";
+    });
+
+    return updateContentLike;
+  };
+
+  /**
+   * 좋아요 카운트 높이기
+   * @param {*} profileIdx 
+   * @param {*} contentIdx 
+   * @return 이미 카운팅된 LikeRank 정보 (skip) or 새로 카운팅된 LikeRank 정보 (create)
+   */
+  pickContentIncrease = async(profileIdx, contentIdx) => {
+    const searchInfo = await LikeRank.findOne({
+      where: {
+        [Op.and]: [{ profileIdx }, { contentIdx }]
+      },
+    })
+
+    if(!searchInfo){
+      // 해당 계정으로 좋아요 한 경우 없는 경우
+      const likeInfo = await LikeRank.create({
+        profileIdx, contentIdx
+      })
+
+      return 'create';
+    }
+
+    return 'skip';
+  }
+
+  /**
+   * 좋아요 카운트 낮추기
+   * @param {*} profileIdx 
+   * @param {*} contentIdx 
+   * @return 이미 카운팅된 LikeRank 정보 (skip) or 카운팅 제거한 LikeRank 정보 (destroy)
+   */
+  pickContentdecrease = async(profileIdx, contentIdx) => {
+    const searchInfo = await LikeRank.findOne({
+      where: {
+        [Op.and]: [{ profileIdx }, { contentIdx }]
+      },
+    })
+
+    if(searchInfo){
+      // 해당 계정으로 좋아요 한 경우 있는 경우
+      const likeInfo = await LikeRank.destroy({
+        where: {
+          [Op.and]: [{ profileIdx }, { contentIdx }]
+        },
+      })
+
+      return 'destroy';
+    }
+
+    return 'skip';
+  }
 }
 
 module.exports = MovieRepository;

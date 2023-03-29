@@ -1,5 +1,6 @@
 const MovieService = require("../services/movie.service");
 const Joi = require("joi");
+const Boom = require("boom");
 
 class MovieController {
   constructor() {
@@ -91,16 +92,49 @@ class MovieController {
   //viewHistory가 있을때 조회
   viewHistory = async (req, res, next) => {
     // try {
-    const { viewHistoryIdx, contentIdx } = req.params;
-    const category = await this.movieService.viewHistory(
-      viewHistoryIdx,
-      contentIdx
+    const { profileIdx } = res.locals.profile;
+    const viewHistory = await this.movieService.viewHistory(
+      profileIdx
     );
-    res.status(200).json({ category });
+    res.status(200).json({ viewHistory });
     // } catch (error) {
     //   next(error);
     // }
   };
+
+  // 영상 재생 - (+ 시청 기록 + 내가 본 재생 기록)
+  viewContent = async (req, res, next) => {
+    try{
+      const { profileIdx } = res.locals.profile;
+      const { contentIdx } = req.params;
+
+      const viewContent = await this.movieService.viewContent(contentIdx);
+      await this.movieService.viewIncrease(profileIdx, contentIdx);
+      await this.movieService.viewRecordHistory(profileIdx, contentIdx);
+
+      res.status(200).json({ viewContent });
+    }catch(err) {
+      next(err);
+    }
+  }
+
+  pickThisContent = async (req, res, next) => {
+    try{
+      const { profileIdx } = res.locals.profile;
+      const { contentIdx } = req.params;
+
+      const pickThisContent = await this.movieService.pickThisContent(profileIdx, contentIdx);
+
+      if(pickThisContent === 'create'){
+        res.status(200).json({ message: '이 영화를 좋아요 카테고리에 추가했습니다.' });
+      }else{
+        res.status(200).json({ message: '이 영화를 좋아요 카테고리에서 제거했습니다.' });
+      }
+    }catch(err) {
+      next(err);
+    }
+  }
+
 }
 
 module.exports = MovieController;

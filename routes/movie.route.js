@@ -36,4 +36,10 @@ router.get("/rank/like", authMiddleware, movieController.likeRank);
 // //viewHistory가 있을때 조회
 router.get("/viewHistory", authMiddleware, movieController.viewHistory);
 
+// 영상 재생
+router.get("/view/:contentIdx", authMiddleware, movieController.viewContent);
+
+// 영상 좋아요
+router.put("/like/:contentIdx", authMiddleware, movieController.pickThisContent);
+
 module.exports = router;

@@ -83,16 +83,80 @@ class MovieService {
     return category;
   };
 
-  //viewHistory가 있을때 조회
-  viewHistory = async (viewHistoryIdx, contentIdx) => {
+  /**
+   * 내가 본 영상 리스트 조회
+   * @param {String} profileIdx
+   * @returns 내가 본 영상 배열
+   */
+  viewHistory = async (profileIdx) => {
     const category = await this.movieRepository.viewHistory(
-      viewHistoryIdx,
-      contentIdx
+      profileIdx
     );
     if (!category) {
       throw Boom.notFound("카테고리가 존재하지 않습니다.", false);
     }
     return category;
+  };
+
+  /**
+   * 영상 재생
+   * @param {String} contentIdx
+   * @returns 영상 정보 contentIdx, name, videoUrl, videoThumUrl
+   */
+  viewContent = async (contentIdx) => {
+    const viewContent = await this.movieRepository.viewContent(
+      contentIdx
+    )
+    if (!viewContent) {
+      throw Boom.notFound("영상이 존재하지 않습니다.", false);
+    }
+    return viewContent;
+  }
+
+  /**
+   * 영상 조회 횟수 증가
+   * @param {String} profileIdx
+   * @param {String} contentIdx
+   * @returns 방금 조회수 증가시킨 데이터
+   */
+  viewIncrease = async (profileIdx, contentIdx) => {
+    const viewIncrease = await this.movieRepository.viewIncrease(
+      profileIdx, contentIdx
+    )
+    return viewIncrease;
+  }
+  
+  /**
+   * 내가 본 영상 기록 남기기
+   * @param {String} profileIdx
+   * @param {String} contentIdx
+   * @return 기록 작성 (create) /수정 데이터 (update)
+   */
+  viewRecordHistory = async (profileIdx, contentIdx) => {
+    const viewRecordHistory = await this.movieRepository.viewRecordHistory(
+      profileIdx, contentIdx
+    )
+    return viewRecordHistory;
+  }
+
+  /**
+   * 이 컨텐츠 좋아요
+   * @param {String} profileIdx
+   * @param {String} contentIdx
+   * @return 'delete' or 'create'
+   */
+  pickThisContent = async (profileIdx, contentIdx) => {
+    const pickThisContent = await this.movieRepository.pickThisContent(profileIdx, contentIdx)
+
+    if(pickThisContent === 'create'){
+      // 좋아요 한 경우 likeRank +
+      await this.movieRepository.pickContentIncrease(profileIdx, contentIdx)
+    }else{
+      // 좋아요 취소 한 경우 likeRank -
+      await this.movieRepository.pickContentdecrease(profileIdx, contentIdx)
+    }
+
+    return pickThisContent
   };
 }
 
