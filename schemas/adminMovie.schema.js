@@ -1,4 +1,4 @@
-const Joi = require("joi");
+const Joi = require('joi');
 
 const messages = {
   "string.base": "이 필드는 문자열로 이루어져야 합니다.",
