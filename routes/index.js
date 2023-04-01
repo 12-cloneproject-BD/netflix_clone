@@ -7,12 +7,12 @@ const videoRouter = require("./movie.route");
 const likeRouter = require("./like.route");
 const saveRouter = require("./save.route");
 const adminRouter = require('./admin.route');
+const adminRouter = require('./admin.route');
 
 router.use("/user", userRouter);
 router.use("/profile", profileRouter);
 router.use("/movies", videoRouter, likeRouter, saveRouter);
 router.use('/admin', adminRouter);
 router.use("/profile", profileRouter);
-router.use("/search", searchRouter);
 
 module.exports = router;
