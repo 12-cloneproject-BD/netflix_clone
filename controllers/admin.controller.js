@@ -3,7 +3,7 @@ const Boom = require("boom");
 const Joi = require("joi");
 const _ = require('lodash');
 const multer = require("multer");
-const schema = require("../schemas/adminMovie.schema");
+// const schema = require("../schemas/adminMovie.schema");
 
 class AdminController {
   constructor() {
@@ -18,25 +18,86 @@ class AdminController {
         kind,
         viewLimit,
         playtime,
-        status
+        status,
       } = req.body;
+      console.log(name,
+        desc,
+        kind,
+        viewLimit,
+        playtime,
+        status);
       const files = req.files;
-      const filenameImage = req.files.filenameImage;
-      const filenameVideo = req.files.filenameVideo;
+      const filenameImage = req.files.find(file => file.fieldname === 'filenameImage').filename;
+      const filenameVideo = req.files.find(file => file.fieldname === 'filenameVideo').filename;
 
-      const videothumbUrl = `http://localhost:3050/uploads/${filenameImage}`;
-      const videoUrl = `http://localhost:3050/uploads/${filenameVideo}`;
+      const videothumbUrl = `http://localhost:3051/uploads/${filenameImage}`;
+      const videoUrl = `http://localhost:3051/uploads/${filenameVideo}`;
+
+
+      // const messages = {
+      //   "string.base": "이 필드는 문자열로 이루어져야 합니다.",
+      //   "string.empty": "이 필드는 비어 있을 수 없습니다.",
+      //   "string.min": "이 필드는 최소 {{#limit}} 문자 이상이어야 합니다.",
+      //   "string.max": "이 필드는 최대 {{#limit}} 문자 이하여야 합니다.",
+      //   "any.required": "이 필드는 필수입니다.",
+      // };
       
-      const validate = schema.validate(
-        { name, kind, desc, playtime, viewLimit, status, videothumbUrl, videoUrl },
-        { abortEarly: false }
-      );
+      // const schema = Joi.object({
+      //     name: Joi.string()
+      //       .min(1)
+      //       .max(30)
+      //       .messages({
+      //         ...messages,
+      //         "string.min": "이 필드는 최소 {{#limit}} 문자 이상이어야 합니다.",
+      //         "string.max": "이 필드는 최대 {{#limit}} 문자 이하여야 합니다.",
+      //       }),
+      //     kind: Joi.string()
+      //       .min(1)
+      //       .max(30)
+      //       .message({
+      //         ...messages,
+      //         "string.min": "이 필드는 최소 {{#limit}} 문자 이상이어야 합니다.",
+      //         "string.max": "이 필드는 최대 {{#limit}} 문자 이하여야 합니다.",
+      //       }),
+      //     desc: Joi.string()
+      //       .min(1)
+      //       .max(300)
+      //       .message({
+      //         ...messages,
+      //         "string.min": "이 필드는 최소 {{#limit}} 문자 이상이어야 합니다.",
+      //         "string.max": "이 필드는 최대 {{#limit}} 문자 이하여야 합니다.",
+      //       }),
+      //     playtime: Joi.any().message({
+      //       ...messages,
+      //       "any.required": "이 필드는 필수입니다.",
+      //     }),
+      //     viewLimit: Joi.string().message({
+      //       ...messages,
+      //       "any.required": "이 필드는 필수입니다.",
+      //     }),
+      //     status: Joi.string().message({
+      //       ...messages,
+      //       "any.required": "이 필드는 필수입니다.",
+      //     }),
+      //     videothumbUrl: Joi.string().message({
+      //       ...messages,
+      //       "any.required": "이 필드는 필수입니다.",
+      //     }),
+      //     videoUrl: Joi.string().message({
+      //       ...messages,
+      //       "any.required": "이 필드는 필수입니다.",
+      //     }),
+      //   });
+      // const validate = schema.validate(
+      //   { name, kind, desc, playtime, viewLimit, status, videothumbUrl, videoUrl },
+      //   { abortEarly: false }
+      // );
 
-      if (validate.error) {
-        throw Boom.badRequest(validate.error.message);
-      } else {
-        console.log("Validate input");
-      }
+      // if (validate.error) {
+      //   throw Boom.badRequest(validate.error.message);
+      // } else {
+      //   console.log("Validate input");
+      // }
       
       const postedMovie = await this.adminService.postMovie({
         name,
@@ -48,6 +109,14 @@ class AdminController {
         videothumbUrl,
         videoUrl,
       });
+      console.log( name,
+        kind,
+        desc,
+        playtime,
+        viewLimit,
+        status,
+        videothumbUrl,
+        videoUrl,);
       return res.status(201).json({postedMovie, message: "영상 등록을 완료했습니다." });
     } catch (error) {
       if (Boom.isBoom(error)) {

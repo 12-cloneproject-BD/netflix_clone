@@ -18,18 +18,6 @@ class AdminService {
     videoUrl,
   }) => {
     try {
-      if (
-        !name ||
-        !kind ||
-        !desc ||
-        !viewLimit ||
-        !playtime ||
-        !status ||
-        !videothumbUrl ||
-        !videoUrl
-      ) {
-        throw Boom.preconditionFailed("데이터 형식이 올바르지 않습니다.");
-      }
       await this.adminRepository.postMovie({
         name,
         kind,
