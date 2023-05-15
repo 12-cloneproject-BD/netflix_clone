@@ -8,7 +8,7 @@ const { Op } = require("sequelize");
 class SearchService {
   constructor() {
     this.searchRepository = new SearchRepository();
-    this.redisClient = RedisConnector.getClient();
+    // this.redisClient = RedisConnector.getClient();
   }
 
   /**

@@ -29,14 +29,7 @@ class MovieRepository extends Content {
       ],
     });
 
-    const filteredMovies = movies.filter((movie) => {
-      return (
-        movie.viewLimit === viewLimit ||
-        (viewLimit === "VL000001" && movie.viewLimit === "VL000002")
-      );
-    });
-
-    return filteredMovies;
+    return movies;
   };
 
   //영상 카테고리 전달
@@ -53,11 +46,9 @@ class MovieRepository extends Content {
       where: { codeUseColum: "genre", codeValue: genre },
       attributes: ["codename", "codeValue"],
     });
-
-    if (!findGenre) {
-      throw new Error(`No matching genre: ${genre}`);
-    }
-
+    return findGenre;
+  };
+  findCategoryList = async (videoList) => {
     const findCategory = await Content.findAll({
       raw: true,
       attributes: [
@@ -73,23 +64,13 @@ class MovieRepository extends Content {
           as: "Categories",
           attributes: ["genre"],
           where: {
-            genre: findGenre.dataValues.codeValue,
+            genre: videoList.dataValues.codeValue,
           },
         },
       ],
     });
 
-    const filteredVideos = findCategory.filter((movie) => {
-      return (
-        movie.viewLimit === viewLimit ||
-        (viewLimit === "VL000001" && movie.viewLimit === "VL000002")
-      );
-    });
-
-    return {
-      Genre: findGenre.dataValues.codename,
-      videos: filteredVideos,
-    };
+    return findCategory;
   };
 
   //영상 상세조회
@@ -128,18 +109,7 @@ class MovieRepository extends Content {
       attributes: ["person"],
     });
 
-    const personCodes = findPerson
-      .filter((p) => {
-        const codeValue = findAllPerson.find(
-          (fp) => fp.person === p.dataValues.codeValue
-        );
-        return codeValue !== undefined;
-      })
-      .map((p) => p.dataValues.codename);
-    return {
-      Video: findOnesMovie,
-      actor: personCodes,
-    };
+    return [findPerson, findOnesMovie, findAllPerson];
   };
 
   //찜목록 조회
@@ -165,14 +135,7 @@ class MovieRepository extends Content {
       ],
     });
 
-    const filteredVideos = findMovies.filter((movie) => {
-      return (
-        movie.viewLimit === viewLimit ||
-        (viewLimit === "VL000001" && movie.viewLimit === "VL000002")
-      );
-    });
-
-    return filteredVideos;
+    return findMovies;
   };
 
   //viewRank순 조회
@@ -197,21 +160,7 @@ class MovieRepository extends Content {
       group: ["Content.contentIdx"],
     });
 
-    const filteredVideos = findMovies.filter((movie) => {
-      return (
-        movie.viewLimit === viewLimit ||
-        (viewLimit === "VL000001" && movie.viewLimit === "VL000002")
-      );
-    });
-
-    const rankedVideos = filteredVideos.map((movie, index) => {
-      return {
-        ...movie,
-        rank: index + 1,
-      };
-    });
-
-    return rankedVideos;
+    return findMovies;
   };
 
   //likeRank순 조회
@@ -236,50 +185,8 @@ class MovieRepository extends Content {
       group: ["Content.contentIdx"],
     });
 
-    const filteredVideos = findMovies.filter((movie) => {
-      return (
-        movie.viewLimit === viewLimit ||
-        (viewLimit === "VL000001" && movie.viewLimit === "VL000002")
-      );
-    });
-
-    const rankedVideos = filteredVideos.map((movie, index) => {
-      return {
-        ...movie,
-        rank: index + 1,
-      };
-    });
-
-    return { rankedVideos };
+    return findMovies;
   };
-
-  // likeRank = async (likeRankIdx, contentIdx) => {
-  //   const findMovies = await Content.findAll({
-  //     raw: true,
-  //     where: { contentIdx },
-  //     attributes: ["contentIdx", "name", "videoUrl", "videoThumUrl"],
-  //     include: [
-  //       {
-  //         model: LikeRank,
-  //         where: {
-  //           [Op.and]: [{ likeRankIdx }, { contentIdx }],
-  //         },
-  //       },
-  //     ],
-  //   });
-  //   const likeCount = await Like.count({ where: { contentIdx } });
-  //   await LikeRank.upsert({ contentIdx, likeRankIdx, likeCount });
-
-  //   const likeRanks = await LikeRank.findAll({
-  //     where: { likeRankIdx },
-  //     order: [["likeCount", "DESC"]], // sort by likeCount in descending order
-  //   });
-  //   return { findMovies, likeRanks };
-  // };
-
-
-  // where: { codeUseColum: "person" },
-  // attributes: ["codename", "codeValue"],
 
   /**
    * 내가 본 영상 리스트 조회
@@ -289,7 +196,7 @@ class MovieRepository extends Content {
   viewHistory = async (profileIdx) => {
     const findContentKey = await ViewHistory.findAll({
       where: {
-        profileIdx
+        profileIdx,
       },
       attributes: ["contentIdx"],
       order: [["viewtime", "DESC"]],
@@ -303,8 +210,8 @@ class MovieRepository extends Content {
         contentIdx: contentIdxs,
       },
       order: [
-        [Sequelize.literal(`FIELD(contentIdx, '${contentIdxs.join("','")}')`)]
-      ]
+        [Sequelize.literal(`FIELD(contentIdx, '${contentIdxs.join("','")}')`)],
+      ],
     });
 
     return findMovies;
@@ -346,7 +253,6 @@ class MovieRepository extends Content {
    * @return 기록 작성 (create) /수정 데이터 (update)
    */
   viewRecordHistory = async (profileIdx, contentIdx) => {
-
     let updateRecordHistory = await ViewHistory.findOrCreate({
       where: {
         [Op.and]: [{ profileIdx }, { contentIdx }],
@@ -359,24 +265,24 @@ class MovieRepository extends Content {
     }).then(([data, created]) => {
       if (!created) {
         // 데이터 존재
-        return 'update'
-      }else{
-        return 'create';
+        return "update";
+      } else {
+        return "create";
       }
     });
 
-    if(updateRecordHistory === 'update'){
+    if (updateRecordHistory === "update") {
       await ViewHistory.update(
         {
-          viewtime: new Date()
+          viewtime: new Date(),
         },
         {
           where: {
             [Op.and]: [{ profileIdx }, { contentIdx }],
-          }
+          },
         }
-      )
-      updateRecordHistory = 'update'
+      );
+      updateRecordHistory = "update";
     }
 
     return updateRecordHistory;
@@ -396,7 +302,7 @@ class MovieRepository extends Content {
       defaults: {
         profileIdx,
         contentIdx,
-        viewTime: new Date()
+        viewTime: new Date(),
       },
     }).then(([data, created]) => {
       if (!created) {
@@ -412,55 +318,56 @@ class MovieRepository extends Content {
 
   /**
    * 좋아요 카운트 높이기
-   * @param {*} profileIdx 
-   * @param {*} contentIdx 
+   * @param {*} profileIdx
+   * @param {*} contentIdx
    * @return 이미 카운팅된 LikeRank 정보 (skip) or 새로 카운팅된 LikeRank 정보 (create)
    */
-  pickContentIncrease = async(profileIdx, contentIdx) => {
+  pickContentIncrease = async (profileIdx, contentIdx) => {
     const searchInfo = await LikeRank.findOne({
       where: {
-        [Op.and]: [{ profileIdx }, { contentIdx }]
+        [Op.and]: [{ profileIdx }, { contentIdx }],
       },
-    })
+    });
 
-    if(!searchInfo){
+    if (!searchInfo) {
       // 해당 계정으로 좋아요 한 경우 없는 경우
       const likeInfo = await LikeRank.create({
-        profileIdx, contentIdx
-      })
+        profileIdx,
+        contentIdx,
+      });
 
-      return 'create';
+      return "create";
     }
 
-    return 'skip';
-  }
+    return "skip";
+  };
 
   /**
    * 좋아요 카운트 낮추기
-   * @param {*} profileIdx 
-   * @param {*} contentIdx 
+   * @param {*} profileIdx
+   * @param {*} contentIdx
    * @return 이미 카운팅된 LikeRank 정보 (skip) or 카운팅 제거한 LikeRank 정보 (destroy)
    */
-  pickContentdecrease = async(profileIdx, contentIdx) => {
+  pickContentdecrease = async (profileIdx, contentIdx) => {
     const searchInfo = await LikeRank.findOne({
       where: {
-        [Op.and]: [{ profileIdx }, { contentIdx }]
+        [Op.and]: [{ profileIdx }, { contentIdx }],
       },
-    })
+    });
 
-    if(searchInfo){
+    if (searchInfo) {
       // 해당 계정으로 좋아요 한 경우 있는 경우
       const likeInfo = await LikeRank.destroy({
         where: {
-          [Op.and]: [{ profileIdx }, { contentIdx }]
+          [Op.and]: [{ profileIdx }, { contentIdx }],
         },
-      })
+      });
 
-      return 'destroy';
+      return "destroy";
     }
 
-    return 'skip';
-  }
+    return "skip";
+  };
 }
 
 module.exports = MovieRepository;
